@@ -14,8 +14,8 @@
 
 <body>
     <h1 class="h1">Bouncing Balls</h1>
-    <div id="bounce-container">
-        <div id="bounce-bg"></div>
+    <div id="bounce-container" class="row mx-3 my-3">
+        <div id="bounce-bg" class="col-lg"></div>
 
         <div style="margin-left:20px; width: 500px;">
             <button class="btn btn-success" onclick="new Ball()">Create A Ball</button>
@@ -105,9 +105,21 @@
             }
 
             bounceIfOnEdges() {
-                let [x,y] = this.coordinates;
-                if (x < 0 || x > Canvas.rect.width - this.diameter) this.direction = toDegrees(Math.atan2(Math.sin(toRadians(this.direction)), -Math.cos(toRadians(this.direction))));
-                if (y < 0 || y > Canvas.rect.height - this.diameter) this.direction = toDegrees(Math.atan2(-Math.sin(toRadians(this.direction)), Math.cos(toRadians(this.direction))));
+                const [x,y] = this.coordinates;
+                const width = Canvas.rect.width - this.diameter;
+                const height = Canvas.rect.height - this.diameter;
+
+                if (x < 0 || x > width) {
+                    this.direction = toDegrees(Math.atan2(Math.sin(toRadians(this.direction)), -Math.cos(toRadians(this.direction))));
+                    if (x < 0) this.coordinates = [0, y]
+                    else if (x > width) this.coordinates = [width, y]
+                }
+
+                if (y < 0 || y > height) {
+                    this.direction = toDegrees(Math.atan2(-Math.sin(toRadians(this.direction)), Math.cos(toRadians(this.direction))));
+                    if (y < 0) this.coordinates = [x, 0]
+                    else if (y > height) this.coordinates = [x, height]
+                }
             }
 
             static handleStartStop() {
