@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <link href="styles.css" rel="stylesheet">
+    <title>Bouncing Balls</title>
+</head>
+
+<body>
+    <h1 class="h1">Bouncing Balls</h1>
+    <div id="bounce-container">
+        <div id="bounce-bg"></div>
+
+        <div style="margin-left:20px; width: 500px;">
+            <button class="btn btn-success" onclick="new Ball()">Create A Ball</button>
+            <button class="btn btn-danger" onclick="Ball.destroyAll()">Destroy All Balls</button>
+            <button class="btn btn-primary my-1"
+                onclick="Ball.handleStartStop()"
+            >Start / Stop</button>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Color</th>
+                        <th>Diameter</th>
+                        <th>X</th>
+                        <th>Y</th>
+                        <th>Direction</th>
+                        <th>Speed</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+
+            </table>
+        </div>
+
+    </div>
+    <script>
+        class Ball {
+            static all = [];
+            static isMoving = true;
+
+            constructor() {
+                Ball.all.push(this)
+                this.number = Ball.all.length;
+                this.el = this.create();
+                this.intervalId = -1;
+                this.coordinates = [
+                    Math.random() * (Canvas.rect.width - this.diameter),
+                    Math.random() * (Canvas.rect.height - this.diameter)
+                ];
+                this.direction = Math.floor(Math.random() * 360);
+                this.speed = Math.ceil(Math.random() * 10);
+                this.toggleMotion();
+                this.addRowToTable();
+                this.updateTable();
+            }
+
+            //coordinates as array like [x,y]
+            get coordinates() { return this._coordinates }
+            set coordinates([x,y]) {
+                this._coordinates = [x,y];
+                this.el.style.left = x + 'px';
+                this.el.style.bottom = y + 'px';
+            }
+
+            create() {
+                const el = document.createElement("div")
+                el.innerHTML = `<div class="ball-count">${this.number}</div>`
+                el.className = "ball"
+
+                const R = Math.floor(23 + Math.random() * 80)
+                el.style.width = R + 'px';
+                el.style.height = R + 'px';
+
+                this.color = {
+                    r: Math.floor(Math.random() * 255),
+                    g: Math.floor(Math.random() * 255),
+                    b: Math.floor(Math.random() * 255)
+                };
+                el.style.background = `rgb(${this.color.r}, ${this.color.g}, ${this.color.b})`;
+
+                this.diameter = R;
+                Canvas.bg.append(el);
+
+                return el
+            }
+
+            move() {
+                const distance = this.speed
+                const [x,y] = this.coordinates;
+                this.coordinates = [
+                    x + distance * Math.cos(toRadians(this.direction)),
+                    y + distance * Math.sin(toRadians(this.direction))
+                ]
+                this.bounceIfOnEdges()
+            }
+
+            bounceIfOnEdges() {
+                let [x,y] = this.coordinates;
+                if (x < 0 || x > Canvas.rect.width - this.diameter) this.direction = toDegrees(Math.atan2(Math.sin(toRadians(this.direction)), -Math.cos(toRadians(this.direction))));
+                if (y < 0 || y > Canvas.rect.height - this.diameter) this.direction = toDegrees(Math.atan2(-Math.sin(toRadians(this.direction)), Math.cos(toRadians(this.direction))));
+            }
+
+            static handleStartStop() {
+                Ball.isMoving = !Ball.isMoving;
+                Ball.all.forEach(b => { b?.toggleMotion()})
+            }
+
+            toggleMotion() {
+                clearInterval(this.intervalId)
+                if (Ball.isMoving) {
+                    this.intervalId = setInterval(() => {
+                        this.move();
+                        this.updateTable()
+                    }, 10)
+                }
+            }
+
+            addRowToTable() {
+                const row = document.createElement("tr")
+                row.dataset.number = this.number
+                row.innerHTML = `
+                    <td>${this.number}</td>
+                    <td>
+                        <div class="color-td" style="background:rgb(${this.color.r}, ${this.color.g}, ${this.color.b});"></div>
+                    </td>
+                    <td>${this.diameter}</td>
+                    <td></td>
+                    <td></td>
+                    <td>${this.direction}</td>
+                    <td>${this.speed}</td>
+                `;
+                const td = document.createElement("td");
+                td.innerHTML = '<button class="btn btn-sm btn-danger">×</button>';
+                td.style.color = "red";
+                td.onclick = () => this.destroy();
+                row.appendChild(td);
+                document.querySelector("tbody").appendChild(row);
+                this.row = row;
+            }
+
+            updateTable() {
+                const [,,,x,y,dir] = this.row.children;
+                x.innerText = this.coordinates[0].toFixed(2);
+                y.innerText = this.coordinates[1].toFixed(2);
+                dir.innerText = Math.round(this.direction);
+            }
+
+            destroy() {
+                this.el.remove();
+                this.row.remove();
+                const index = Ball.all.findIndex(x => x?.number == this.number);
+                Ball.all[index] = null;
+
+                delete this;
+            }
+
+            static destroyAll() {
+                Ball.all.forEach(ball => { ball?.destroy()})
+                Ball.all = [];
+            }
+        }
+
+        class Canvas {
+            static bg = document.querySelector("#bounce-bg")
+
+            static get rect () {
+                return this.bg.getBoundingClientRect()
+            }
+        }
+
+        const toRadians = a => a * Math.PI / 180
+        const toDegrees = r => (360 + r * (180 / Math.PI)) % 360
+
+    </script>
+</body>
+
+</html>
