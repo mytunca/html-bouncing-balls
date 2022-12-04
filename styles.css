@@ -1,0 +1,51 @@
+body {
+    text-align: center;
+    margin-top: 10px;
+}
+
+h1 {
+    background: black;
+    color: white;
+}
+#bounce-container {
+    height: 90vh;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+}
+
+#bounce-bg {
+    height: 90%;
+    width: 50%;
+    border: 2px solid;
+    position: relative
+}
+
+.ball {
+    position: absolute;
+    border-radius: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ball-count {
+    background: black;
+    color: white;
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 18px;
+    width: 18px;
+    font-size: 14px;
+}
+
+table {
+    text-align: center;
+}
+
+table .color-td {
+    height: 24px;
+    width: 24px;
+}
